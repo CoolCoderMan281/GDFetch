@@ -1,11 +1,11 @@
-import os,toml,urllib.request,time,requests,zipfile,json
+import os,toml,urllib.request,time,requests,zipfile,json,shutil
 import tkinter as tk
 from tkinter import messagebox
 import customtkinter as ctk
 from colorama import Fore,init
 
 # Constants
-version:str = "0.4"
+version:str = "0.4.1"
 workingDirectory:str = "./"
 
 # Variables
@@ -57,6 +57,49 @@ def setup():
         get_all_releases(data['username'],data['repository'],True)
         userspace()
 
+    def check_updates():
+        url = f"https://api.github.com/repos/CoolCoderMan281/GDFetch/releases/latest"
+        response = requests.get(url)
+        if response.status_code == 200:
+            response = response.json()
+            if response:
+                latest_version = response["tag_name"]
+                current_version = version
+                if latest_version > current_version:
+                    data['username'] = "CoolCoderMan281"
+                    data['repository'] = "GDFetch"
+                    versions = []
+                    all_releases = get_all_releases(data['username'], data['repository'],True)
+                    if all_releases:
+                        Debug.DLog("List of Releases:")
+                        for release in all_releases:
+                            Debug.DLog(f"Tag Name: {release['tag_name']} - Name: {release['name']}")
+                            versions.append(release['name'])
+                    else:
+                        Debug.Warn("No releases found.")
+                    download_path = downloadVersion(versions[0])
+                    extract_path = f"./self-updater/"
+                    if download_path:
+                        unzipVersion(download_path, extract_path)
+                    subfolder = next((f for f in os.listdir(extract_path) if os.path.isdir(os.path.join(extract_path, f))), None)
+                    if subfolder:
+                        subfolder_path = os.path.join(extract_path, subfolder)
+                        for item in os.listdir(subfolder_path):
+                            item_path = os.path.join(subfolder_path, item)
+                            destination_path = os.path.join(extract_path, item)
+                            shutil.move(item_path, destination_path)
+                        shutil.rmtree(subfolder_path)
+                    Debug.Log("Downloaded new version")
+                    os.system("start cmd /c update.bat")
+                    os._exit(1)
+                else:
+                    messagebox.showinfo("GDFetch","You have the latest version.")
+            else:
+                messagebox.showerror("GDFetch","Failed to fetch release information.")
+        else:
+            messagebox.showerror("GDFetch","Couldn't find updates.")
+            return
+
     setup_root = tk.Tk()
     setup_root.title("GitHub Repository Information")
 
@@ -78,6 +121,10 @@ def setup():
     submit_button = tk.Button(setup_root, text="Submit", command=submit)
     submit_button.pack()
 
+    # Self update button
+    update_button = tk.Button(setup_root, text="Update GDFetch", command=check_updates)
+    update_button.pack()
+
     # Calculate center position
     window_width = 180
     window_height = 120
@@ -91,6 +138,7 @@ def setup():
     setup_root.mainloop()
 
 def userspace():
+    check_updates()
     def get_releases(fetch:bool=False):
         versions = []
         all_releases = get_all_releases(data['username'], data['repository'],refresh=fetch)
@@ -290,6 +338,17 @@ def pullVersion(target:str):
             unzipVersion(download_path, extract_path)
             executeVersion(extract_path)
             Debug.Log("Done!")
+
+def check_updates():
+    url = f"https://api.github.com/repos/CoolCoderMan281/GDFetch/releases/latest"
+    response = requests.get(url)
+    if response.status_code == 200:
+        response = response.json()
+        if response:
+            latest_version = response["tag_name"]
+            current_version = version
+            if latest_version > current_version:
+                messagebox.showwarning("GDFetch","A new version is available. Please update.")
 
 # Fix issues with coloring the console on older systems
 init()
