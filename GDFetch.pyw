@@ -5,7 +5,7 @@ import customtkinter as ctk
 from colorama import Fore,init
 
 # Constants
-version:str = "0.4.3"
+version:str = "0.4.4"
 workingDirectory:str = "./"
 
 # Variables
@@ -39,7 +39,7 @@ def setup():
             return False
     def submit():
         username = username_entry.get()
-        repository = repository_entry.get()
+        repository = repo_var.get()
         Debug.DLog(f"Username: {username}, Repository: {repository}")
         if (username == "" or repository == ""):
             return
@@ -98,6 +98,22 @@ def setup():
             messagebox.showerror("GDFetch","Couldn't find updates.")
             return
 
+    def update_repos(event=None):
+        Debug.DLog("Checking repos..")
+        url = f"https://api.github.com/users/{username_entry.get()}/repos"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            repos = [repo['name'] for repo in response.json()]
+            repository_entry['values'] = ()
+            if repos:
+                repository_entry['values'] = repos
+                repository_entry.set(repos[0])
+            return repos
+        else:
+            print(f"Failed to fetch repositories: {response.status_code}")
+            return []
+
     setup_root = tk.Tk()
     setup_root.iconbitmap("./Icon.ico")
     setup_root.title("GitHub Repository Information")
@@ -107,13 +123,14 @@ def setup():
     username_label.pack()
     username_entry = tk.Entry(setup_root)
     username_entry.pack()
-    # Set default value
     username_entry.insert(0, "CoolCoderMan281")
+    username_entry.bind("<Return>",update_repos)
 
     # Repository input
     repository_label = tk.Label(setup_root, text="Repository:")
     repository_label.pack()
-    repository_entry = tk.Entry(setup_root)
+    repo_var = tk.StringVar()
+    repository_entry = tk.ttk.Combobox(setup_root, textvariable=repo_var, width=200, state='readonly')
     repository_entry.pack()
 
     # Submit button
@@ -134,6 +151,7 @@ def setup():
 
     # Set window position
     setup_root.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
+    update_repos()
     setup_root.mainloop()
 
 def userspace():
