@@ -1,5 +1,6 @@
 import os,toml,urllib.request,time,requests,zipfile,json
 import tkinter as tk
+from tkinter import messagebox
 import customtkinter as ctk
 from colorama import Fore,init
 
@@ -28,11 +29,22 @@ class Debug:
 
 # Create save data
 def setup():
+    def check_repository_existence(username, repository):
+        url = f"https://api.github.com/repos/{username}/{repository}"
+        headers = {"Accept": "application/vnd.github.v3+json"}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return True
+        else:
+            return False
     def submit():
         username = username_entry.get()
         repository = repository_entry.get()
         Debug.DLog(f"Username: {username}, Repository: {repository}")
         if (username == "" or repository == ""):
+            return
+        if (not check_repository_existence(username,repository)):
+            messagebox.showerror("GDFetch",f"The repository {username}/{repository} does not exist!")
             return
         data['username']:str = username
         data['repository']:str = repository
