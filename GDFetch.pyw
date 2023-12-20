@@ -5,7 +5,7 @@ import customtkinter as ctk
 from colorama import Fore,init
 
 # Constants
-version:str = "0.4.1"
+version:str = "0.4.2"
 workingDirectory:str = "./"
 
 # Variables
@@ -66,10 +66,8 @@ def setup():
                 latest_version = response["tag_name"]
                 current_version = version
                 if latest_version > current_version:
-                    data['username'] = "CoolCoderMan281"
-                    data['repository'] = "GDFetch"
                     versions = []
-                    all_releases = get_all_releases(data['username'], data['repository'],True)
+                    all_releases = get_all_releases("CoolCoderMan281", "GDFetch",True)
                     if all_releases:
                         Debug.DLog("List of Releases:")
                         for release in all_releases:
@@ -101,6 +99,7 @@ def setup():
             return
 
     setup_root = tk.Tk()
+    setup_root.iconbitmap("./Icon.ico")
     setup_root.title("GitHub Repository Information")
 
     # Username input
@@ -171,6 +170,7 @@ def userspace():
         setup()
 
     root = tk.Tk()
+    root.iconbitmap("./Icon.ico")
     root.title(f"GDFetch {version}")
     # Dropdown to select versions (empty initially)
     version_var = tk.StringVar()
