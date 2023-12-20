@@ -5,7 +5,7 @@ import customtkinter as ctk
 from colorama import Fore,init
 
 # Constants
-version:str = "0.4.2"
+version:str = "0.4.3"
 workingDirectory:str = "./"
 
 # Variables
