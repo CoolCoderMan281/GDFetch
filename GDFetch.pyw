@@ -31,7 +31,7 @@ def setup():
     def submit():
         username = username_entry.get()
         repository = repository_entry.get()
-        Debug.DLog(f"Username: {username}, Repository: {repository}")  # Just an example, replace this with your logic
+        Debug.DLog(f"Username: {username}, Repository: {repository}")
         if (username == "" or repository == ""):
             return
         data['username']:str = username
@@ -41,11 +41,9 @@ def setup():
         data['setupComplete'] = True
         with open(workingDirectory+".data", "w") as f:
             toml.dump(data,f)
-        Debug.DLog("Setup was succesful!")
         setup_root.destroy()
         get_all_releases(data['username'],data['repository'],True)
         userspace()
-        
 
     setup_root = tk.Tk()
     setup_root.title("GitHub Repository Information")
@@ -69,8 +67,8 @@ def setup():
     submit_button.pack()
 
     # Calculate center position
-    window_width = 180  # Adjust this according to your frame width
-    window_height = 120  # Adjust this according to your frame height
+    window_width = 180
+    window_height = 120
     screen_width = setup_root.winfo_screenwidth()
     screen_height = setup_root.winfo_screenheight()
     x_coordinate = (screen_width - window_width) // 2
@@ -82,8 +80,6 @@ def setup():
 
 def userspace():
     def get_releases(fetch:bool=False):
-        # Code to fetch and populate the versions in the dropdown
-        # Replace this with your logic to fetch versions and populate the dropdown
         versions = []
         all_releases = get_all_releases(data['username'], data['repository'],refresh=fetch)
         if all_releases:
@@ -96,12 +92,10 @@ def userspace():
         version_dropdown['values'] = versions
 
     def get():
-        # Code to handle the pullVersion() method
-        # Replace this with your logic to handle the pullVersion() method
         selected_version = version_var.get()
         if selected_version == "":
             return
-        Debug.Log(f"Pulling version: {selected_version}")  # Example: print the selected version
+        Debug.Log(f"Pulling version: {selected_version}")
         releases = get_all_releases(data['username'],data['repository'])
         the_release = ""
         for release in releases:
@@ -110,8 +104,7 @@ def userspace():
         pullVersion(the_release)
 
     def refresh_releases():
-            # Code to refresh the release list in the dropdown
-            get_releases(True)
+        get_releases(True)
 
     def back_setup():
         root.destroy()
@@ -129,7 +122,7 @@ def userspace():
     # Refresh button to update the release list in the dropdown
     refresh_button = tk.Button(root, text="Refresh Versions", command=refresh_releases)
     refresh_button.pack()
-    #
+    # Version label
     version_label = tk.Label(root, text=f"GDFetch {version}", relief=tk.SUNKEN, anchor=tk.W)
     version_label.pack(side=tk.BOTTOM, fill=tk.X)
     # Button to go back to setup
@@ -139,8 +132,8 @@ def userspace():
     get_releases()
     
     # Calculate center position
-    window_width = 220  # Adjust this according to your frame width
-    window_height = 120  # Adjust this according to your frame height
+    window_width = 220
+    window_height = 120
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
     x_coordinate = (screen_width - window_width) // 2
@@ -148,28 +141,9 @@ def userspace():
 
     # Set window position
     root.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
-    root.mainloop()
+    root.mainloop()    
 
-# Fetch latest version
-def getLatestVersion(refresh:bool=False) -> str:
-    global waiting
-    waiting = True
-    Debug.DLog("Pulling from github..")
-    os.system(f"curl -i https://github.com/{data['username']}/{data['repository']}/releases/latest > latest.txt")
-    while True:
-        if (os.path.exists("./latest.txt")):
-            break
-        pass
-    tmp:str = ""
-    with(open(workingDirectory+"latest.txt")) as f: 
-        tmp = f.readlines(); tmp = tmp[5].removeprefix(f"Location: https://github.com/{data['username']}/{data['repository']}/releases/tag/")
-    os.system("del latest.txt")
-    waiting = False
-    Debug.Log(f"Found version: {tmp.strip()}")
-    return tmp.strip()
-    
-
-# Download latest version
+# Download selected version
 def downloadVersion(target:str) -> str:
     try:
         release_api_url = f"https://api.github.com/repos/{data['username']}/{data['repository']}/releases/tags/{target}"
@@ -178,14 +152,14 @@ def downloadVersion(target:str) -> str:
         if response.status_code == 200:
             assets = response.json().get("assets", [])
             if assets:
-                if len(assets) == 1:  # Automatically select if only one asset is available
+                if len(assets) == 1:
                     download_url = assets[0]['browser_download_url']
                     file_name = assets[0]['name']
                     print(f"Downloading {file_name}")
                     download_path = f"./{file_name}"
                     urllib.request.urlretrieve(download_url, download_path)
                     print("Download complete!")
-                    return os.path.splitext(download_path)[0]  # Return the path without extension
+                    return os.path.splitext(download_path)[0]
                 else:
                     print("Available assets for this release:")
                     for index, asset in enumerate(assets, start=1):
@@ -201,7 +175,7 @@ def downloadVersion(target:str) -> str:
                             download_path = f"./{file_name}"
                             urllib.request.urlretrieve(download_url, download_path)
                             print("Download complete!")
-                            return os.path.splitext(download_path)[0]  # Return the path without extension
+                            return os.path.splitext(download_path)[0]
                         else:
                             print("Invalid choice.")
                     except ValueError:
@@ -221,7 +195,6 @@ def unzipVersion(file_path: str, extract_path: str):
     try:
         Debug.Log(f"Extracting {file_path} to {extract_path}")
         with zipfile.ZipFile(file_path, 'r') as zip_ref:
-            # Extract all contents directly into the specified folder
             zip_ref.extractall(extract_path)
         Debug.Log(f"Extraction complete to {extract_path}")
     except zipfile.BadZipFile:
@@ -248,7 +221,6 @@ def find_executables(start_dir):
 # Run the build
 def executeVersion(extract_path: str):
     global ranProcess
-    # List all files in the specified directory to identify available files
     Debug.Log(f"Scanning {extract_path} for build .exe")
 
     executable_files = find_executables(extract_path)
@@ -258,7 +230,6 @@ def executeVersion(extract_path: str):
             Debug.DLog(exe_file)
     else:
         Debug.DLog("No executable files found.")
-    # Locate and run the Unity executable within the extracted folder
     exe_files = [f for f in executable_files if f.endswith(".exe")]
 
     unity_exe = None
@@ -275,7 +246,7 @@ def executeVersion(extract_path: str):
         Debug.Warn("Unity executable not found.")
 
 def get_all_releases(username, repository,refresh:bool=False):
-    cache_file = "releases_cache.json"  # Path to the cache file
+    cache_file = "releases_cache.json"
 
     if refresh or not os.path.exists(cache_file):
         Debug.DLog("Fetching from GitHub...")
@@ -296,29 +267,26 @@ def get_all_releases(username, repository,refresh:bool=False):
         with open(cache_file, "r") as f:
             return json.load(f)
 
-def pullVersion(target: str = None):
-    if target is None:
-        target = getLatestVersion()
-
-    extract_path = f"./{target}"  # Set the extract_path to the target folder
+def pullVersion(target:str):
+    extract_path = f"./{target}"
     if os.path.exists(extract_path) and os.path.isdir(extract_path):
         Debug.Warn("You already have that version!")
         executeVersion(f"./{target}")
     else:
         download_path = downloadVersion(target)
         if download_path:
-            unzipVersion(download_path, extract_path)  # Unzip to the specified folder
-            executeVersion(extract_path)  # Run Unity exe from the extracted folder
+            unzipVersion(download_path, extract_path)
+            executeVersion(extract_path)
             Debug.Log("Done!")
 
-# Pre-user experience
+# Fix issues with coloring the console on older systems
 init()
 os.system("cls")
 
 # Info
 Debug.Log("GDFetch "+version)
 
-# Check for saves
+# Practically the entrypoint, use this for startup execution
 if(os.path.exists(workingDirectory+".data")):
     Debug.Log("Found configuration!")
     with open(workingDirectory+".data","r") as f:
@@ -331,7 +299,3 @@ if(os.path.exists(workingDirectory+".data")):
 else:
     Debug.Log("No configuration found.")
     setup()
-
-# Main program - finally...
-Debug.Log("Ready!")
-# userspace is now called when setup completes
