@@ -5,7 +5,7 @@ import customtkinter as ctk
 from colorama import Fore,init
 
 # Constants
-version:str = "0.4.4"
+version:str = "0.4.5"
 workingDirectory:str = "./"
 
 # Variables
@@ -74,9 +74,13 @@ def setup():
                             Debug.DLog(f"Tag Name: {release['tag_name']} - Name: {release['name']}")
                             versions.append(release['name'])
                     else:
-                        Debug.Warn("No releases found.")
+                        Debug.Error("Update failed, not found")
+                        return
                     download_path = downloadVersion(versions[0])
                     extract_path = f"./self-updater/"
+                    if not os.path.exists("./self-updater"):
+                        Debug.Error("Update failed, download")
+                        return
                     if download_path:
                         unzipVersion(download_path, extract_path)
                     subfolder = next((f for f in os.listdir(extract_path) if os.path.isdir(os.path.join(extract_path, f))), None)
