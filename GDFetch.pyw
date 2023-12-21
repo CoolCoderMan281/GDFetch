@@ -78,11 +78,16 @@ def setup():
                         return
                     download_path = downloadVersion(versions[0])
                     extract_path = f"./self-updater/"
-                    if not os.path.exists("./self-updater"):
-                        Debug.Error("Update failed, download")
-                        return
+                    dataBackup = data
+                    data['username'] = "CoolCoderMan281"
+                    data['repository'] = "GDFetch"
                     if download_path:
                         unzipVersion(download_path, extract_path)
+                        Debug.Log("Unzipped..")
+                    data = dataBackup
+                    if not os.path.exists("./self-updater/"):
+                        Debug.Error("Update failed, download")
+                        return
                     subfolder = next((f for f in os.listdir(extract_path) if os.path.isdir(os.path.join(extract_path, f))), None)
                     if subfolder:
                         subfolder_path = os.path.join(extract_path, subfolder)
@@ -370,7 +375,7 @@ def check_updates():
             latest_version = response["tag_name"]
             current_version = version
             if latest_version > current_version:
-                messagebox.showwarning("GDFetch","A new version is available. Please update.")
+                messagebox.showwarning("GDFetch","A new version is available. Update in setup.")
 
 # Fix issues with coloring the console on older systems
 init()
