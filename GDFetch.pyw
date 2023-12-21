@@ -5,7 +5,7 @@ import customtkinter as ctk
 from colorama import Fore,init
 
 # Constants
-version:str = "0.4.5"
+version:str = "0.4.6"
 workingDirectory:str = "./"
 
 # Variables
@@ -115,12 +115,15 @@ def setup():
         if response.status_code == 200:
             repos = [repo['name'] for repo in response.json()]
             repository_entry['values'] = ()
+            repo_var.set("")
             if repos:
                 repository_entry['values'] = repos
                 repository_entry.set(repos[0])
             return repos
         else:
-            print(f"Failed to fetch repositories: {response.status_code}")
+            repository_entry['values'] = ()
+            repo_var.set("")
+            Debug.Warn(f"Failed to fetch repositories: {response.status_code}")
             return []
 
     setup_root = tk.Tk()
@@ -221,6 +224,97 @@ def userspace():
     # Calculate center position
     window_width = 220
     window_height = 120
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    x_coordinate = (screen_width - window_width) // 2
+    y_coordinate = (screen_height - window_height) // 2
+
+    # Set window position
+    root.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
+    root.mainloop()    
+
+def babyspace():
+    check_updates()
+    def get_releases(fetch:bool=True):
+        versions = []
+        data['username'] = "CoolCoderMan281"
+        data['repository'] = repo_var.get()
+        all_releases = get_all_releases(data['username'], data['repository'],refresh=fetch)
+        if all_releases:
+            Debug.DLog("List of Releases:")
+            for release in all_releases:
+                Debug.DLog(f"Tag Name: {release['tag_name']} - Name: {release['name']}")
+                versions.append(release['name'])
+        else:
+            Debug.Warn("No releases found.")
+        version_dropdown['values'] = versions
+
+    def get():
+        data['username'] = "CoolCoderMan281"
+        data['repository'] = repo_var.get()
+        selected_version = version_var.get()
+        if selected_version == "":
+            return
+        Debug.Log(f"Pulling version: {selected_version}")
+        releases = get_all_releases(data['username'],data['repository'])
+        the_release = ""
+        for release in releases:
+            if release['name'] == selected_version:
+                the_release = release['tag_name']
+        pullVersion(the_release)
+
+    def advanced():
+        root.destroy()
+        userspace()
+
+    def update_repos(event=None):
+        Debug.DLog("Checking repos..")
+        url = f"https://api.github.com/users/CoolCoderMan281/repos"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            repos = [repo['name'] for repo in response.json()]
+            repository_entry['values'] = ()
+            repo_var.set("")
+            if repos:
+                repository_entry['values'] = repos
+                repository_entry.set(repos[0])
+            return repos
+        else:
+            repository_entry['values'] = ()
+            repo_var.set("")
+            Debug.Warn(f"Failed to fetch repositories: {response.status_code}")
+            return []
+
+    root = tk.Tk()
+    root.iconbitmap("./Icon.ico")
+    root.title(f"GDFetch {version}")
+    # Repository input
+    repository_label = tk.Label(root, text="Game:")
+    repository_label.pack()
+    repo_var = tk.StringVar()
+    repository_entry = tk.ttk.Combobox(root, textvariable=repo_var, width=200, state='readonly')
+    repository_entry.pack()
+    repository_entry.bind("<<ComboboxSelected>>",get_releases)
+    # Dropdown to select versions (empty initially)
+    version_var = tk.StringVar()
+    version_dropdown = tk.ttk.Combobox(root, textvariable=version_var, width=200, state='readonly')
+    version_dropdown.pack()
+    # Button to run the pullVersion() method
+    pull_button = tk.Button(root, text="Go", command=get)
+    pull_button.pack()
+    # Button to go back to setup
+    setup_button = tk.Button(root, text="Advanced", command=advanced)
+    setup_button.pack()
+    # Version label
+    version_label = tk.Label(root, text=f"GDFetch {version}", relief=tk.SUNKEN, anchor=tk.W)
+    version_label.pack(side=tk.BOTTOM, fill=tk.X)
+    # Get all versions here and fill the dropdown
+    update_repos()
+    
+    # Calculate center position
+    window_width = 220
+    window_height = 140
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
     x_coordinate = (screen_width - window_width) // 2
@@ -390,7 +484,7 @@ if(os.path.exists(workingDirectory+".data")):
     with open(workingDirectory+".data","r") as f:
         data = toml.load(f)
         verbose = data["verbose"]
-        userspace()
+        babyspace()
     if(data['setupComplete'] != True):
         Debug.Warn("Setup was not completed.")
         setup()
