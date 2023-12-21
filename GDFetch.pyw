@@ -5,7 +5,7 @@ import customtkinter as ctk
 from colorama import Fore,init
 
 # Constants
-version:str = "0.4.6"
+version:str = "0.4.5"
 workingDirectory:str = "./"
 
 # Variables
@@ -55,9 +55,10 @@ def setup():
             toml.dump(data,f)
         setup_root.destroy()
         get_all_releases(data['username'],data['repository'],True)
-        userspace()
+        babyspace()
 
     def check_updates():
+        global data
         url = f"https://api.github.com/repos/CoolCoderMan281/GDFetch/releases/latest"
         response = requests.get(url)
         if response.status_code == 200:
@@ -76,11 +77,11 @@ def setup():
                     else:
                         Debug.Error("Update failed, not found")
                         return
-                    download_path = downloadVersion(versions[0])
-                    extract_path = f"./self-updater/"
                     dataBackup = data
                     data['username'] = "CoolCoderMan281"
                     data['repository'] = "GDFetch"
+                    download_path = downloadVersion(versions[0])
+                    extract_path = f"./self-updater/"
                     if download_path:
                         unzipVersion(download_path, extract_path)
                         Debug.Log("Unzipped..")
